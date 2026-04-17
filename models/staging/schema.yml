@@ -1,0 +1,119 @@
+version: 2
+
+models:
+  - name: stg_motor_vehicle_register
+    description: Cleaned staging model for motor vehicle register records from the landing table, excluding rows with invalid numeric values in selected fields.
+    columns:
+      - name: objectid
+        description: Row identifier from the source motor vehicle register table.
+        data_tests:
+          - not_null
+          - unique
+      - name: make
+        description: Vehicle make recorded in the source data.
+      - name: model
+        description: Vehicle model recorded in the source data.
+      - name: tla
+        description: Territorial local authority associated with the vehicle record.
+      - name: height_num
+        description: Parsed numeric height value derived from the raw height column.
+      - name: number_of_seats_num
+        description: Parsed numeric seat count derived from the raw number_of_seats column.
+      - name: power_rating_num
+        description: Parsed numeric power rating derived from the raw power_rating column.
+      - name: vdam_weight_num
+        description: Parsed numeric VDAM weight derived from the raw vdam_weight column.
+      - name: vehicle_year_num
+        description: Parsed numeric vehicle year derived from the raw vehicle_year column.
+      - name: width_num
+        description: Parsed numeric width value derived from the raw width column.
+
+  - name: stg_motor_vehicle_register_rejected
+    description: Rows from the motor vehicle register landing table that were excluded from the cleaned staging model because one or more selected numeric fields could not be parsed.
+    columns:
+      - name: objectid
+        description: Row identifier from the source motor vehicle register table.
+        data_tests:
+          - not_null
+          - unique
+      - name: height
+        description: Raw height value that may contain non-numeric data.
+      - name: number_of_seats
+        description: Raw seat count value that may contain non-numeric data.
+      - name: power_rating
+        description: Raw power rating value that may contain non-numeric data.
+      - name: vdam_weight
+        description: Raw VDAM weight value that may contain non-numeric data.
+      - name: vehicle_year
+        description: Raw vehicle year value that may contain non-numeric data.
+      - name: width
+        description: Raw width value that may contain non-numeric data.
+
+  - name: stg_ev_roam_charging_stations
+    description: Staging model for EV Roam charging station records parsed from the landing JSON table.
+    columns:
+      - name: object_id
+        description: Source object identifier for the charging station record.
+        data_tests:
+          - not_null
+          - unique
+      - name: global_id
+        description: Global identifier supplied in the source payload.
+      - name: station_name
+        description: Charging station name.
+      - name: address
+        description: Street address for the charging station.
+      - name: operator
+        description: Charging station operator.
+      - name: owner
+        description: Charging station owner.
+      - name: type
+        description: Source station type value.
+      - name: current_type
+        description: Electrical current type for the station.
+      - name: car_park_count
+        description: Parsed number of car parks associated with the station.
+      - name: number_of_connectors
+        description: Parsed number of connectors available at the station.
+      - name: latitude
+        description: Parsed latitude coordinate.
+      - name: longitude
+        description: Parsed longitude coordinate.
+      - name: date_first_operational
+        description: Parsed date the station first became operational.
+      - name: connectors_list
+        description: Raw connector list from the source payload.
+      - name: max_time_limit
+        description: Source maximum time limit value for charging.
+      - name: has_carpark_cost
+        description: Source flag indicating whether car park cost applies.
+      - name: has_charging_cost
+        description: Source flag indicating whether charging cost applies.
+      - name: has_tourist_attraction
+        description: Source flag indicating whether a tourist attraction is nearby.
+      - name: is_24_hours
+        description: Source flag indicating whether the station operates 24 hours.
+
+  - name: stg_statsnz_population
+    description: Staging model for Stats NZ population estimates and recent change metrics by area.
+    columns:
+      - name: area_name
+        description: Name of the geographic area in the Stats NZ population dataset.
+        data_tests:
+          - not_null
+      - name: estimated_resident_population_2018
+        description: Estimated resident population for 2018.
+      - name: estimated_resident_population_2019
+        description: Estimated resident population for 2019.
+      - name: estimated_resident_population_2020
+        description: Estimated resident population for 2020.
+      - name: estimated_resident_population_2021
+        description: Estimated resident population for 2021.
+      - name: average_annual_change_2018_2020_num
+        description: Average annual numeric population change across 2018 to 2020.
+      - name: average_annual_change_2018_2020_pct
+        description: Average annual percentage population change across 2018 to 2020.
+      - name: change_2021_num
+        description: Numeric population change in 2021.
+      - name: change_2021_pct
+        description: Percentage population change in 2021.
