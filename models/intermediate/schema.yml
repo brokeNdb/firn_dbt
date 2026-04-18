@@ -1,0 +1,108 @@
+version: 2
+
+models:
+  - name: int_ev_metrics
+    description: Intermediate EV adoption model at one row per normalized location and registration month. It combines monthly vehicle registration counts, EV counts, and population context for downstream mart facts.
+    columns:
+      - name: normalized_location_name
+        description: Canonical lowercased location name used to join EV adoption metrics into the dimensional mart.
+        data_tests:
+          - not_null
+      - name: registration_year_month
+        description: Registration month in YYYY-MM format for the EV adoption grain.
+        data_tests:
+          - not_null
+      - name: vehicle_count
+        description: Total number of registered vehicles for the location-month.
+      - name: ev_count
+        description: Number of registered EV vehicles for the location-month.
+      - name: population_count
+        description: Population associated with the normalized location, carried forward for downstream enrichment.
+
+  - name: int_charging_metrics
+    description: Intermediate charging infrastructure model at one row per normalized location. It summarizes charging station counts and connector capacity for downstream mart facts.
+    columns:
+      - name: normalized_location_name
+        description: Canonical lowercased location name used to join charging infrastructure into the dimensional mart.
+        data_tests:
+          - not_null
+      - name: station_count
+        description: Number of charging stations observed for the location.
+      - name: connector_count
+        description: Total number of connectors observed across charging stations for the location.
+      - name: avg_connectors_per_station
+        description: Average number of connectors per charging station for the location.
+
+  - name: int_location_dimension_prep
+    description: Conformed location preparation model with one row per normalized location name collected from staged EV, vehicle registration, and population datasets.
+    columns:
+      - name: location_key
+        description: Surrogate location key generated over the normalized location list.
+        data_tests:
+          - not_null
+          - unique
+      - name: normalized_location_name
+        description: Canonical lowercased location value used to align business data across domains.
+        data_tests:
+          - not_null
+          - unique
+      - name: original_location_name
+        description: Representative original location label retained for display and reference.
+
+  - name: int_location_enriched
+    description: Location enrichment model with one row per normalized location name, combining conformed location attributes with population context for the location dimension.
+    columns:
+      - name: location_key
+        description: Surrogate location key carried forward into the location dimension.
+        data_tests:
+          - not_null
+          - unique
+      - name: normalized_location_name
+        description: Canonical lowercased location name used throughout the mart layer.
+        data_tests:
+          - not_null
+          - unique
+      - name: population_count
+        description: Population associated with the normalized location where available.
+
+  - name: int_month_spine
+    description: Intermediate month spine with one row per available registration month derived from EV adoption metrics.
+    columns:
+      - name: full_date
+        description: First day of the represented month.
+        data_tests:
+          - not_null
+          - unique
+      - name: year_month
+        description: Month label in YYYY-MM format.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: int_station_operator_prep
+    description: Intermediate station operator preparation model with one row per normalized operator name.
+    columns:
+      - name: normalized_operator_name
+        description: Canonical lowercased operator name used to build the operator dimension.
+        data_tests:
+          - not_null
+          - unique
+      - name: original_operator_name
+        description: Representative original operator label retained for presentation.
+
+  - name: int_station_nearest_neighbour
+    description: Spatial intermediate model identifying the nearest neighbouring charging station for each station using haversine distance.
+    columns:
+      - name: station_id
+        description: Charging station identifier from the staged EV station model.
+        data_tests:
+          - not_null
+          - unique
+      - name: nearest_station_id
+        description: Identifier of the nearest neighbouring charging station.
+        data_tests:
+          - not_null
+      - name: distance_km
+        description: Great-circle distance in kilometers to the nearest neighbouring charging station.
+        data_tests:
+          - not_null

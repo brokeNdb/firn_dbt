@@ -5,7 +5,7 @@ with source_data as (
         station_count,
         connector_count,
         avg_connectors_per_station
-    from {{ ref('int_charging_station_summary') }}
+    from {{ ref('int_charging_metrics') }}
 
 ),
 

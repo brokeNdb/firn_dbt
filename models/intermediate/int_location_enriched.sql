@@ -4,10 +4,16 @@ with source_data as (
         location_dim.location_key,
         location_dim.normalized_location_name,
         location_dim.original_location_name,
-        population.population_count
+        ev_metrics.population_count
     from {{ ref('int_location_dimension_prep') }} as location_dim
-    left join {{ ref('int_population_by_location') }} as population
-        on location_dim.normalized_location_name = population.normalized_location_name
+    left join (
+        select
+            normalized_location_name,
+            max(population_count) as population_count
+        from {{ ref('int_ev_metrics') }}
+        group by 1
+    ) as ev_metrics
+        on location_dim.normalized_location_name = ev_metrics.normalized_location_name
 
 ),
 

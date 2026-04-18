@@ -2,7 +2,7 @@ with source_data as (
 
     select distinct
         registration_year_month
-    from {{ ref('int_ev_registration_monthly') }}
+    from {{ ref('int_ev_metrics') }}
 
 ),
 

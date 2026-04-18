@@ -5,7 +5,7 @@ with source_data as (
         registration_year_month,
         vehicle_count,
         ev_count
-    from {{ ref('int_ev_registration_monthly') }}
+    from {{ ref('int_ev_metrics') }}
 
 ),
 
