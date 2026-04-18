@@ -1,36 +1,35 @@
 with source_data as (
 
+    select distinct
+        month_date,
+        registration_year_month
+    from {{ ref('int_ev_metrics') }}
+
+),
+
+transformed_data as (
+
     select
-        full_date,
-        year_month
-    from {{ ref('int_month_spine') }}
-
-),
-
-typed_data as (
-
-    select *
+        year(month_date) * 100 + month(month_date) as dim_date_key,
+        month_date,
+        year(month_date) as year,
+        month(month_date) as month,
+        to_char(month_date, 'MMMM') as month_name,
+        registration_year_month as year_month
     from source_data
-
-),
-
-filtered_data as (
-
-    select *
-    from typed_data
 
 ),
 
 final_model as (
 
     select
-        year(full_date) * 100 + month(full_date) as date_key,
-        full_date,
-        year(full_date) as year,
-        month(full_date) as month,
-        year_month,
-        to_char(full_date, 'MMMM') as month_name
-    from filtered_data
+        dim_date_key,
+        month_date,
+        year,
+        month,
+        month_name,
+        year_month
+    from transformed_data
 
 )
 

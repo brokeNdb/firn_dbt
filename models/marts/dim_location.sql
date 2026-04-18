@@ -1,37 +1,37 @@
 with source_data as (
 
     select
-        location_key,
-        normalized_location_name,
-        original_location_name,
+        location_natural_key,
+        location_name,
+        territorial_authority_name,
+        region_name,
         population_count
-    from {{ ref('int_location_enriched') }}
+    from {{ ref('int_location_conformed') }}
 
 ),
 
-typed_data as (
+transformed_data as (
 
-    select *
+    select
+        md5(location_natural_key) as dim_location_key,
+        location_natural_key,
+        location_name,
+        territorial_authority_name,
+        region_name,
+        population_count
     from source_data
-
-),
-
-filtered_data as (
-
-    select *
-    from typed_data
-    where normalized_location_name is not null
 
 ),
 
 final_model as (
 
     select
-        location_key,
-        normalized_location_name,
-        original_location_name,
+        dim_location_key,
+        location_name,
+        territorial_authority_name,
+        region_name,
         population_count
-    from filtered_data
+    from transformed_data
 
 )
 

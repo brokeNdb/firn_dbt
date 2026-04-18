@@ -1,35 +1,30 @@
 with source_data as (
 
+    select distinct
+        operator_natural_key,
+        operator_name
+    from {{ ref('int_charging_metrics') }}
+    where operator_natural_key is not null
+        and operator_natural_key != ''
+
+),
+
+transformed_data as (
+
     select
-        normalized_operator_name,
-        original_operator_name
-    from {{ ref('int_station_operator_prep') }}
-
-),
-
-typed_data as (
-
-    select *
+        md5(operator_natural_key) as dim_station_operator_key,
+        operator_natural_key,
+        operator_name
     from source_data
-
-),
-
-filtered_data as (
-
-    select *
-    from typed_data
-    where normalized_operator_name is not null
-        and normalized_operator_name != ''
 
 ),
 
 final_model as (
 
     select
-        row_number() over (order by normalized_operator_name) as operator_key,
-        normalized_operator_name,
-        original_operator_name
-    from filtered_data
+        dim_station_operator_key,
+        operator_name
+    from transformed_data
 
 )
 
