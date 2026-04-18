@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: landing
+    description: Raw landing tables loaded into Snowflake for this project.
+    database: FIRN_PROJECT
+    schema: LANDING
+    tables:
+      - name: motor_vehicle_register
+        description: Raw motor vehicle registration landing table.
+        identifier: MOTOR_VEHICLE_REGISTER_TABLE
+      - name: ev_roam_charging_stations
+        description: Raw EV Roam charging stations JSON landing table.
+        identifier: EV_ROAM_CHARGING_STATIONS_JSON
+      - name: statsnz_population
+        description: Raw Stats NZ population landing table.
+        identifier: STATSNZ_POPULATION_TABLE

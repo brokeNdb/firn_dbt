@@ -3,8 +3,9 @@ with source_data as (
     select
         location_key,
         normalized_location_name,
-        original_location_name
-    from {{ ref('int_location_dimension_prep') }}
+        original_location_name,
+        population_count
+    from {{ ref('int_location_enriched') }}
 
 ),
 
@@ -28,7 +29,8 @@ final_model as (
     select
         location_key,
         normalized_location_name,
-        original_location_name
+        original_location_name,
+        population_count
     from filtered_data
 
 )

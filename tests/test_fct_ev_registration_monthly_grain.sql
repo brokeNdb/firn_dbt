@@ -1,6 +1,6 @@
 select
-    location_key,
-    date_key,
+    location_id,
+    month_id,
     count(*) as row_count
 from {{ ref('fct_ev_registration_monthly') }}
 group by 1, 2

@@ -1,7 +1,7 @@
 with source_data as (
 
     select variant_col
-    from FIRN_PROJECT.LANDING.EV_ROAM_CHARGING_STATIONS_JSON
+    from {{ source('landing', 'ev_roam_charging_stations') }}
 
 ),
 

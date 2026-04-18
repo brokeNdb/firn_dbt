@@ -1,7 +1,7 @@
 with source_data as (
 
     select *
-    from FIRN_PROJECT.LANDING.STATSNZ_POPULATION_TABLE
+    from {{ source('landing', 'statsnz_population') }}
 
 ),
 
