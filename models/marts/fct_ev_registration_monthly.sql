@@ -12,8 +12,8 @@ with source_data as (
 typed_data as (
 
     select
-        location_dim.location_key,
-        date_dim.date_key,
+        location_dim.location_key as location_id,
+        date_dim.date_key as month_id,
         source_data.vehicle_count,
         source_data.ev_count
     from source_data
@@ -34,8 +34,8 @@ filtered_data as (
 final_model as (
 
     select
-        location_key,
-        date_key,
+        location_id,
+        month_id,
         vehicle_count,
         ev_count
     from filtered_data

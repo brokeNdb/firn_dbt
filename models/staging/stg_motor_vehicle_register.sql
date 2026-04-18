@@ -1,7 +1,7 @@
 with source_data as (
 
     select *
-    from FIRN_PROJECT.LANDING.MOTOR_VEHICLE_REGISTER_TABLE
+    from {{ source('landing', 'motor_vehicle_register') }}
 
 ),
 

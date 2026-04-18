@@ -12,7 +12,7 @@ with source_data as (
 typed_data as (
 
     select
-        location_dim.location_key,
+        location_dim.location_key as location_id,
         source_data.station_count,
         source_data.connector_count,
         source_data.avg_connectors_per_station
@@ -32,7 +32,7 @@ filtered_data as (
 final_model as (
 
     select
-        location_key,
+        location_id,
         station_count,
         connector_count,
         avg_connectors_per_station
