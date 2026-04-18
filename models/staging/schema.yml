@@ -35,7 +35,9 @@ models:
         description: Row identifier from the source motor vehicle register table.
         data_tests:
           - not_null
-          - unique
+      - name: rejection_reason
+        description: Name of the source column whose numeric conversion failed for this rejected row.
+
       - name: height
         description: Raw height value that may contain non-numeric data.
       - name: number_of_seats
@@ -93,27 +95,21 @@ models:
         description: Source flag indicating whether a tourist attraction is nearby.
       - name: is_24_hours
         description: Source flag indicating whether the station operates 24 hours.
+      - name: normalized_location_name
+        description: Simple lowercased and trimmed location token derived from the last comma-delimited segment of the address.
 
   - name: stg_statsnz_population
-    description: Staging model for Stats NZ population estimates and recent change metrics by area.
+    description: Minimal staging model for Stats NZ population data using the latest available population count by location.
     columns:
-      - name: area_name
-        description: Name of the geographic area in the Stats NZ population dataset.
+      - name: location_name
+        description: Source location name from the Stats NZ population dataset.
         data_tests:
           - not_null
-      - name: estimated_resident_population_2018
-        description: Estimated resident population for 2018.
-      - name: estimated_resident_population_2019
-        description: Estimated resident population for 2019.
-      - name: estimated_resident_population_2020
-        description: Estimated resident population for 2020.
-      - name: estimated_resident_population_2021
-        description: Estimated resident population for 2021.
-      - name: average_annual_change_2018_2020_num
-        description: Average annual numeric population change across 2018 to 2020.
-      - name: average_annual_change_2018_2020_pct
-        description: Average annual percentage population change across 2018 to 2020.
-      - name: change_2021_num
-        description: Numeric population change in 2021.
-      - name: change_2021_pct
-        description: Percentage population change in 2021.
+      - name: population_count
+        description: Latest available population count from ERP21.
+        data_tests:
+          - not_null
+      - name: normalized_location_name
+        description: Lowercased and trimmed version of the source location name for normalization and matching.
+        data_tests:
+          - not_null

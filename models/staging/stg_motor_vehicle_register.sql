@@ -1,90 +1,61 @@
--- models/staging/stg_motor_vehicle_register.sql
+with source_data as (
 
-with invalid_rows as (
-
-    select objectid
+    select *
     from FIRN_PROJECT.LANDING.MOTOR_VEHICLE_REGISTER_TABLE
-    where try_to_number(height) is null and height is not null
 
-    union
+),
 
-    select objectid
-    from FIRN_PROJECT.LANDING.MOTOR_VEHICLE_REGISTER_TABLE
-    where try_to_number(number_of_seats) is null and number_of_seats is not null
+typed_data as (
 
-    union
+    select
+        source_data.*,
+        try_to_number(height::varchar) as height_num,
+        try_to_number(number_of_seats::varchar) as number_of_seats_num,
+        try_to_number(power_rating::varchar) as power_rating_num,
+        try_to_number(vdam_weight::varchar) as vdam_weight_num,
+        try_to_number(vehicle_year::varchar) as vehicle_year_num,
+        try_to_number(width::varchar) as width_num
+    from source_data
 
-    select objectid
-    from FIRN_PROJECT.LANDING.MOTOR_VEHICLE_REGISTER_TABLE
-    where try_to_number(power_rating) is null and power_rating is not null
+),
 
-    union
+filtered_data as (
 
-    select objectid
-    from FIRN_PROJECT.LANDING.MOTOR_VEHICLE_REGISTER_TABLE
-    where try_to_number(vdam_weight) is null and vdam_weight is not null
+    select *
+    from typed_data
+    where not (
+        (height is not null and height_num is null)
+        or (number_of_seats is not null and number_of_seats_num is null)
+        or (power_rating is not null and power_rating_num is null)
+        or (vdam_weight is not null and vdam_weight_num is null)
+        or (vehicle_year is not null and vehicle_year_num is null)
+        or (width is not null and width_num is null)
+    )
 
-    union
+),
 
-    select objectid
-    from FIRN_PROJECT.LANDING.MOTOR_VEHICLE_REGISTER_TABLE
-    where try_to_number(vehicle_year) is null and vehicle_year is not null
+final_model as (
 
-    union
-
-    select objectid
-    from FIRN_PROJECT.LANDING.MOTOR_VEHICLE_REGISTER_TABLE
-    where try_to_number(width) is null and width is not null
+    select
+        filtered_data.*,
+        case
+            when lower(coalesce(motive_power, '')) like '%electric%' then 'EV'
+            when lower(coalesce(motive_power, '')) like '%hybrid%' then 'Hybrid'
+            else 'Other'
+        end as motive_power_group,
+        case
+            when try_to_number(first_nz_registration_year::varchar) is not null
+                and try_to_number(first_nz_registration_month::varchar) between 1 and 12
+                then concat(
+                    lpad(to_varchar(try_to_number(first_nz_registration_year::varchar)), 4, '0'),
+                    '-',
+                    lpad(to_varchar(try_to_number(first_nz_registration_month::varchar)), 2, '0')
+                )
+            else null
+        end as registration_year_month
+    from filtered_data
 
 )
 
-select
-    objectid,
-    alternative_motive_power,
-    basic_colour,
-    body_type,
-    cc_rating,
-    chassis7,
-    class,
-    engine_number,
-    first_nz_registration_year,
-    first_nz_registration_month,
-    gross_vehicle_mass,
-    height,
-    import_status,
-    industry_class,
-    industry_model_code,
-    make,
-    model,
-    motive_power,
-    mvma_model_code,
-    number_of_axles,
-    number_of_seats,
-    nz_assembled,
-    original_country,
-    power_rating,
-    previous_country,
-    road_transport_code,
-    submodel,
-    tla,
-    transmission_type,
-    vdam_weight,
-    vehicle_type,
-    vehicle_usage,
-    vehicle_year,
-    vin11,
-    width,
-    synthetic_greenhouse_gas,
-    fc_combined,
-    fc_urban,
-    fc_extra_urban,
-
-    try_to_number(height) as height_num,
-    try_to_number(number_of_seats) as number_of_seats_num,
-    try_to_number(power_rating) as power_rating_num,
-    try_to_number(vdam_weight) as vdam_weight_num,
-    try_to_number(vehicle_year) as vehicle_year_num,
-    try_to_number(width) as width_num
-
-from FIRN_PROJECT.LANDING.MOTOR_VEHICLE_REGISTER_TABLE
-where objectid not in (select objectid from invalid_rows)
+select *
+from final_model

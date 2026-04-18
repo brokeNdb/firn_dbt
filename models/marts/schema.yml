@@ -1,0 +1,77 @@
+version: 2
+
+models:
+  - name: dim_location
+    description: Conformed location dimension with one row per normalized location name. Use this table as the shared join point for registrations, charging infrastructure, and population across the mart layer.
+    columns:
+      - name: location_key
+        description: Surrogate primary key for the location dimension. This is the canonical location join key used by fact tables.
+        data_tests:
+          - not_null
+          - unique
+      - name: normalized_location_name
+        description: Canonical lowercased location name used to align records across staging and intermediate models before they are keyed.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: dim_date
+    description: Month-level date dimension with one row per calendar month across the EV registration history. The grain is the first day of each month, represented by a YYYYMM key for joins from monthly fact tables.
+    columns:
+      - name: date_key
+        description: Integer month key in YYYYMM format used by monthly fact tables.
+        data_tests:
+          - not_null
+          - unique
+      - name: year_month
+        description: Human-readable month label in YYYY-MM format corresponding to the monthly fact grain.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: dim_station_operator
+    description: Deduplicated station operator dimension with one row per normalized operator name from the EV charging station dataset.
+    columns:
+      - name: operator_key
+        description: Surrogate primary key for the station operator dimension.
+        data_tests:
+          - not_null
+          - unique
+      - name: normalized_operator_name
+        description: Canonical lowercased operator name used to collapse formatting differences in the source data.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: fct_ev_registration_monthly
+    description: Monthly EV registration fact with one row per location and registration month. Counts represent all motor vehicle registrations and the EV subset for that location-month grain.
+    columns:
+      - name: location_key
+        description: Foreign key to dim_location identifying the location for the monthly registration counts.
+        data_tests:
+          - not_null
+      - name: date_key
+        description: Foreign key to dim_date identifying the registration month.
+        data_tests:
+          - not_null
+
+  - name: fct_charging_station_snapshot
+    description: Charging infrastructure snapshot fact with one row per location. This model stores the current charging station footprint by location rather than a monthly time series.
+    columns:
+      - name: location_key
+        description: Foreign key to dim_location identifying the location for the charging infrastructure snapshot.
+        data_tests:
+          - not_null
+          - unique
+
+  - name: fct_ev_infrastructure_monthly
+    description: Final monthly EV infrastructure fact with one row per location and month. It combines EV registrations, charging infrastructure snapshot measures, and population so KPI calculations can be analyzed at a consistent location-month grain.
+    columns:
+      - name: location_key
+        description: Foreign key to dim_location identifying the location for the combined monthly EV infrastructure metrics.
+        data_tests:
+          - not_null
+      - name: date_key
+        description: Foreign key to dim_date identifying the month for the combined EV infrastructure metrics.
+        data_tests:
+          - not_null

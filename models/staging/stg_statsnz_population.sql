@@ -1,18 +1,34 @@
-with source as (
+with source_data as (
 
     select *
     from FIRN_PROJECT.LANDING.STATSNZ_POPULATION_TABLE
 
+),
+
+typed_data as (
+
+    select
+        name as location_name,
+        erp21 as population_count,
+        trim(lower(name)) as normalized_location_name
+    from source_data
+
+),
+
+filtered_data as (
+
+    select *
+    from typed_data
+    where population_count is not null
+
+),
+
+final_model as (
+
+    select *
+    from filtered_data
+
 )
 
-select
-    name as area_name,
-    erp18 as estimated_resident_population_2018,
-    erp19 as estimated_resident_population_2019,
-    erp20 as estimated_resident_population_2020,
-    erp21 as estimated_resident_population_2021,
-    avann1820num as average_annual_change_2018_2020_num,
-    avann1820per as average_annual_change_2018_2020_pct,
-    chg2021num as change_2021_num,
-    chg2021per as change_2021_pct
-from source
+select *
+from final_model
