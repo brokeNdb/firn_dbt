@@ -1,3 +1,9 @@
+-- Purpose: Store EV registration and vehicle totals at the location-month fact grain.
+-- Grain: One row per dim_location_key per dim_date_key.
+-- Transformations: Generate the fact surrogate key and populate dimensional foreign keys together with
+-- ev_count, vehicle_count, and population_count for Power BI-ready analysis.
+
+
 with source_data as (
 
     select

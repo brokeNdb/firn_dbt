@@ -1,3 +1,9 @@
+-- Purpose: Build a charging station dimension at the individual station grain.
+-- Grain: One row per station_id.
+-- Transformations: Generate dim_charging_station_key, retain descriptive station attributes,
+-- and ensure a usable geo_point for spatial downstream use cases.
+
+
 with source_data as (
 
     select

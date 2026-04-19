@@ -8,4 +8,11 @@ model-paths: ["models"]
 
 models:
   firn_dbt_project:
-    +materialized: table
+    staging:
+      +materialized: table
+    intermediate:
+      +materialized: table
+    marts:
+      +materialized: table
+    metrics:
+      +enabled: false

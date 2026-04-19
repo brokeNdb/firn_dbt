@@ -1,3 +1,9 @@
+-- Purpose: Build the month-level date dimension used by monthly EV fact tables.
+-- Grain: One row per reporting month.
+-- Transformations: Generate dim_date_key in YYYYMM format and expose year, month, month_name,
+-- year_month, and the representative month_date.
+
+
 with source_data as (
 
     select distinct

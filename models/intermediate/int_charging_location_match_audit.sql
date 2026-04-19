@@ -1,20 +1,15 @@
--- Purpose: Summarize charging infrastructure by conformed territorial authority / city / district geography.
--- Grain: One row per location_natural_key.
--- Transformations: Derive a city candidate from address, map it through exact root matching and a curated
--- alias bridge into the conformed location model, and aggregate station and connector supply metrics.
+-- Purpose: Audit charging station location matching into the conformed territorial authority / city / district geography.
+-- Transformations: Reuse address-derived city candidates, exact root matching, alias bridging, and fallback
+-- normalized location matching to report matched and unmatched charging station coverage.
 
 with source_data as (
 
     select
         station_city_candidate,
         normalized_location_name,
-        operator as operator_name,
-        lower(trim(operator)) as operator_natural_key,
-        coalesce(number_of_connectors, 0) as number_of_connectors,
         address
     from {{ ref('stg_ev_roam_charging_stations') }}
     where station_city_candidate is not null
-        and station_city_candidate != ''
 
 ),
 
@@ -39,11 +34,8 @@ transformed_data as (
                 ' '
             )
         ) as normalized_location_fallback,
-        operator_name,
-        operator_natural_key,
-        number_of_connectors,
-        address,
-        normalized_location_name
+        normalized_location_name,
+        address
     from source_data
 
 ),
@@ -136,24 +128,20 @@ charging_location_aliases as (
 matched_rows as (
 
     select
+        transformed_data.station_city_candidate,
+        transformed_data.normalized_location_name,
+        transformed_data.address,
         coalesce(
             exact_root_match.location_natural_key,
             charging_location_aliases.location_natural_key,
             fallback_root_match.location_natural_key
-        ) as location_natural_key,
+        ) as matched_location_natural_key,
         case
             when exact_root_match.location_natural_key is not null then 'exact_root_match'
             when charging_location_aliases.location_natural_key is not null then 'alias_match'
             when fallback_root_match.location_natural_key is not null then 'fallback_normalized_location_match'
             else 'unmatched'
-        end as match_method,
-        transformed_data.station_city_candidate,
-        transformed_data.normalized_location_fallback,
-        transformed_data.operator_name,
-        transformed_data.operator_natural_key,
-        transformed_data.number_of_connectors,
-        transformed_data.address,
-        transformed_data.normalized_location_name
+        end as match_method
     from transformed_data
     left join {{ ref('int_location_conformed') }} as exact_root_match
         on transformed_data.station_city_candidate = exact_root_match.location_root
@@ -167,15 +155,73 @@ matched_rows as (
 final_model as (
 
     select
-        location_natural_key,
-        any_value(operator_name) as operator_name,
-        any_value(operator_natural_key) as operator_natural_key,
-        count(*) as station_count,
-        coalesce(sum(number_of_connectors), 0) as connector_count,
-        coalesce(avg(number_of_connectors), 0) as avg_connectors_per_station
+        'summary' as audit_row_type,
+        'source_row_count' as audit_metric,
+        count(*)::varchar as audit_value,
+        cast(null as varchar) as station_city_candidate,
+        cast(null as varchar) as normalized_location_name,
+        cast(null as varchar) as address
     from matched_rows
-    where location_natural_key is not null
-    group by 1
+
+    union all
+
+    select
+        'summary' as audit_row_type,
+        'exact_root_match_row_count' as audit_metric,
+        count_if(match_method = 'exact_root_match')::varchar as audit_value,
+        cast(null as varchar) as station_city_candidate,
+        cast(null as varchar) as normalized_location_name,
+        cast(null as varchar) as address
+    from matched_rows
+
+    union all
+
+    select
+        'summary' as audit_row_type,
+        'alias_match_row_count' as audit_metric,
+        count_if(match_method = 'alias_match')::varchar as audit_value,
+        cast(null as varchar) as station_city_candidate,
+        cast(null as varchar) as normalized_location_name,
+        cast(null as varchar) as address
+    from matched_rows
+
+    union all
+
+    select
+        'summary' as audit_row_type,
+        'fallback_match_row_count' as audit_metric,
+        count_if(match_method = 'fallback_normalized_location_match')::varchar as audit_value,
+        cast(null as varchar) as station_city_candidate,
+        cast(null as varchar) as normalized_location_name,
+        cast(null as varchar) as address
+    from matched_rows
+
+    union all
+
+    select
+        'summary' as audit_row_type,
+        'unmatched_row_count' as audit_metric,
+        count_if(match_method = 'unmatched')::varchar as audit_value,
+        cast(null as varchar) as station_city_candidate,
+        cast(null as varchar) as normalized_location_name,
+        cast(null as varchar) as address
+    from matched_rows
+
+    union all
+
+    select
+        'unmatched_example' as audit_row_type,
+        match_method as audit_metric,
+        cast(null as varchar) as audit_value,
+        station_city_candidate,
+        normalized_location_name,
+        address
+    from matched_rows
+    where match_method = 'unmatched'
+    qualify row_number() over (
+        partition by station_city_candidate
+        order by station_city_candidate, normalized_location_name, address
+    ) = 1
 
 )
 

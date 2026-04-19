@@ -1,3 +1,9 @@
+-- Purpose: Store the primary EV supply-versus-demand aggregate fact for the mart.
+-- Grain: One row per dim_location_key per dim_date_key.
+-- Transformations: Combine EV adoption and charging supply at the monthly location grain, generate the
+-- fact surrogate key, and calculate derived KPI fields such as evs_per_station and growth rates.
+
+
 with source_data as (
 
     select

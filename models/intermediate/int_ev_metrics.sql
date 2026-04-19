@@ -1,3 +1,9 @@
+-- Purpose: Summarize EV adoption and vehicle activity by conformed location and month.
+-- Grain: One row per location_natural_key per month_date.
+-- Transformations: Aggregate vehicle_count and ev_count from registrations and attach population context
+-- from the conformed location model for downstream fact construction.
+
+
 with source_data as (
 
     select

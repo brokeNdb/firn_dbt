@@ -23,18 +23,8 @@ models:
       - name: year_month
         description: Human-readable month label in YYYY-MM format.
 
-  - name: dim_station_operator
-    description: Minimal station operator dimension with one row per conformed operator value.
-    columns:
-      - name: dim_station_operator_key
-        description: Surrogate primary key for the station operator dimension.
-        data_tests:
-          - not_null
-          - unique
-
-
   - name: dim_charging_station
-    description: Station-level dimension with one row per charging station and geospatial coordinates.
+    description: Station-level charging dimension with one row per station and retained operator information.
     columns:
       - name: dim_charging_station_key
         description: Surrogate primary key for the charging station dimension.
@@ -46,6 +36,8 @@ models:
         data_tests:
           - not_null
           - unique
+      - name: operator_name
+        description: Normalized operator label retained directly on the station dimension for reporting.
       - name: geo_point
         description: Geospatial point representing station longitude and latitude.
 
@@ -100,14 +92,6 @@ models:
               arguments:
                 to: ref('dim_location')
                 field: dim_location_key
-      - name: dim_station_operator_key
-        description: Foreign key to dim_station_operator.
-        data_tests:
-          - not_null
-          - relationships:
-              arguments:
-                to: ref('dim_station_operator')
-                field: dim_station_operator_key
       - name: station_count
         description: Number of charging stations for the location.
         data_tests:

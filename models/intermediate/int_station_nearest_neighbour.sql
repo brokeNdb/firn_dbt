@@ -1,3 +1,9 @@
+-- Purpose: Find the nearest neighbouring charging station for each staged station.
+-- Grain: One row per station_id.
+-- Transformations: Self-join station coordinates, calculate distance_km with Snowflake HAVERSINE,
+-- exclude self-matches, and keep only the nearest neighbour using QUALIFY ROW_NUMBER() = 1.
+
+
 with source_data as (
 
     select
@@ -15,13 +21,11 @@ transformed_data as (
     select
         source_station.station_id,
         neighbour_station.station_id as nearest_station_id,
-        2 * 6371 * asin(
-            sqrt(
-                pow(sin(radians(neighbour_station.latitude - source_station.latitude) / 2), 2)
-                + cos(radians(source_station.latitude))
-                * cos(radians(neighbour_station.latitude))
-                * pow(sin(radians(neighbour_station.longitude - source_station.longitude) / 2), 2)
-            )
+        haversine(
+            source_station.latitude,
+            source_station.longitude,
+            neighbour_station.latitude,
+            neighbour_station.longitude
         ) as distance_km
     from source_data as source_station
     inner join source_data as neighbour_station
@@ -29,13 +33,11 @@ transformed_data as (
     qualify row_number() over (
         partition by source_station.station_id
         order by
-            2 * 6371 * asin(
-                sqrt(
-                    pow(sin(radians(neighbour_station.latitude - source_station.latitude) / 2), 2)
-                    + cos(radians(source_station.latitude))
-                    * cos(radians(neighbour_station.latitude))
-                    * pow(sin(radians(neighbour_station.longitude - source_station.longitude) / 2), 2)
-                )
+            haversine(
+                source_station.latitude,
+                source_station.longitude,
+                neighbour_station.latitude,
+                neighbour_station.longitude
             ),
             neighbour_station.station_id
     ) = 1
