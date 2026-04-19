@@ -1,44 +1,38 @@
 with source_data as (
 
     select
-        normalized_location_name,
-        registration_year_month,
+        location_natural_key,
+        month_date,
         vehicle_count,
-        ev_count
-    from {{ ref('int_ev_registration_monthly') }}
+        ev_count,
+        population_count
+    from {{ ref('int_ev_metrics') }}
 
 ),
 
-typed_data as (
+transformed_data as (
 
     select
-        location_dim.location_key as location_id,
-        date_dim.date_key as month_id,
-        source_data.vehicle_count,
-        source_data.ev_count
+        md5('fct_ev_registration_monthly|' || location_natural_key || '|' || to_char(month_date, 'YYYY-MM')) as fct_ev_registration_monthly_key,
+        md5(location_natural_key) as dim_location_key,
+        year(month_date) * 100 + month(month_date) as dim_date_key,
+        ev_count,
+        vehicle_count,
+        population_count
     from source_data
-    inner join {{ ref('dim_location') }} as location_dim
-        on source_data.normalized_location_name = location_dim.normalized_location_name
-    inner join {{ ref('dim_date') }} as date_dim
-        on source_data.registration_year_month = date_dim.year_month
-
-),
-
-filtered_data as (
-
-    select *
-    from typed_data
 
 ),
 
 final_model as (
 
     select
-        location_id,
-        month_id,
+        fct_ev_registration_monthly_key,
+        dim_location_key,
+        dim_date_key,
+        ev_count,
         vehicle_count,
-        ev_count
-    from filtered_data
+        population_count
+    from transformed_data
 
 )
 

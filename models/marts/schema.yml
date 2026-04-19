@@ -2,76 +2,131 @@ version: 2
 
 models:
   - name: dim_location
-    description: Conformed location dimension with one row per normalized location name. This dimension is built from intermediate location conformance and enrichment models and includes location-level population for downstream mart joins.
+    description: Location dimension for the EV analytics star schema. One row per conformed business location with a surrogate primary key for fact relationships.
     columns:
-      - name: location_key
-        description: Surrogate primary key for the location dimension. This is the canonical location join key used by mart fact tables.
+      - name: dim_location_key
+        description: Surrogate primary key for the location dimension.
         data_tests:
           - not_null
           - unique
-      - name: normalized_location_name
-        description: Canonical lowercased location name used to align intermediate models before joining to the mart layer.
-        data_tests:
-          - not_null
-          - unique
+      - name: location_name
+        description: Business-friendly location label for reporting.
 
   - name: dim_date
-    description: Month-level date dimension with one row per available registration month. This dimension is sourced from the intermediate month spine and provides a reusable date key for monthly mart facts.
+    description: Month-level date dimension for the EV analytics star schema. One row per available reporting month.
     columns:
-      - name: date_key
-        description: Integer month key in YYYYMM format used by monthly fact tables.
+      - name: dim_date_key
+        description: Surrogate primary key for the monthly date dimension in YYYYMM format.
         data_tests:
           - not_null
           - unique
       - name: year_month
-        description: Human-readable month label in YYYY-MM format corresponding to the monthly fact grain.
-        data_tests:
-          - not_null
-          - unique
+        description: Human-readable month label in YYYY-MM format.
 
   - name: dim_station_operator
-    description: Deduplicated station operator dimension built from the intermediate station operator prep model, with one row per normalized operator name.
+    description: Minimal station operator dimension with one row per conformed operator value.
     columns:
-      - name: operator_key
+      - name: dim_station_operator_key
         description: Surrogate primary key for the station operator dimension.
-        data_tests:
-          - not_null
-          - unique
-      - name: normalized_operator_name
-        description: Canonical lowercased operator name used to collapse formatting differences in the source data.
         data_tests:
           - not_null
           - unique
 
   - name: fct_ev_registration_monthly
-    description: Monthly EV registration fact with one row per location and registration month. Counts represent all motor vehicle registrations and the EV subset at the location-month grain.
+    description: Monthly EV registration fact at one row per location and month.
     columns:
-      - name: location_id
-        description: Foreign key to dim_location identifying the location for the monthly registration counts.
-        data_tests:
-          - not_null
-      - name: month_id
-        description: Foreign key to dim_date identifying the registration month.
-        data_tests:
-          - not_null
-
-  - name: fct_charging_station_snapshot
-    description: Charging infrastructure snapshot fact with one row per location. This mart fact stores current charging supply by location and is not modeled as a monthly time series.
-    columns:
-      - name: location_id
-        description: Foreign key to dim_location identifying the location for the charging infrastructure snapshot.
+      - name: fct_ev_registration_monthly_key
+        description: Surrogate primary key for the EV registration monthly fact.
         data_tests:
           - not_null
           - unique
+      - name: dim_location_key
+        description: Foreign key to dim_location.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: dim_location_key
+      - name: dim_date_key
+        description: Foreign key to dim_date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: dim_date_key
+      - name: ev_count
+        description: Number of EV registrations for the location-month.
+        data_tests:
+          - not_null
+      - name: vehicle_count
+        description: Total vehicle registrations for the location-month.
+        data_tests:
+          - not_null
+      - name: population_count
+        description: Population associated with the location.
+
+  - name: fct_charging_station_snapshot
+    description: Charging infrastructure snapshot fact at one row per location.
+    columns:
+      - name: fct_charging_station_snapshot_key
+        description: Surrogate primary key for the charging station snapshot fact.
+        data_tests:
+          - not_null
+          - unique
+      - name: dim_location_key
+        description: Foreign key to dim_location.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: dim_location_key
+      - name: station_count
+        description: Number of charging stations for the location.
+        data_tests:
+          - not_null
+      - name: connector_count
+        description: Number of connectors for the location.
+        data_tests:
+          - not_null
 
   - name: fct_ev_infrastructure_monthly
-    description: Aggregate fact table combining EV registrations and charging infrastructure to analyse supply vs demand across locations and time.
+    description: Primary aggregate fact table combining EV registrations and charging infrastructure for supply-demand analysis by location and month.
     columns:
-      - name: location_id
-        description: Foreign key to dim_location identifying the reporting location.
+      - name: fct_ev_infrastructure_monthly_key
+        description: Surrogate primary key for the EV infrastructure monthly fact.
         data_tests:
           - not_null
-      - name: month_id
-        description: Foreign key to dim_date identifying the reporting month.
+          - unique
+      - name: dim_location_key
+        description: Foreign key to dim_location.
         data_tests:
           - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: dim_location_key
+      - name: dim_date_key
+        description: Foreign key to dim_date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: dim_date_key
+      - name: ev_count
+        description: Number of EV registrations for the location-month.
+        data_tests:
+          - not_null
+      - name: station_count
+        description: Number of charging stations for the location.
+        data_tests:
+          - not_null
+      - name: connector_count
+        description: Number of connectors for the location.
+        data_tests:
+          - not_null
+      - name: population_count
+        description: Population associated with the location.
