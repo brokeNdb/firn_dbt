@@ -54,13 +54,8 @@ models:
         description: Average number of connectors per station for the location.
 
   - name: int_station_nearest_neighbour
-    description: Spatial intermediate model identifying the nearest neighbouring charging station for each station using Snowflake geospatial distance.
+    description: Spatial intermediate model identifying the nearest neighbouring charging station for each station using haversine distance.
     columns:
-      - name: int_station_nearest_neighbour_key
-        description: Surrogate primary key for the nearest-neighbour station relationship.
-        data_tests:
-          - not_null
-          - unique
       - name: station_id
         description: Charging station identifier from the staged EV station model.
         data_tests:
