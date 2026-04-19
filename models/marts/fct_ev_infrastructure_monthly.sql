@@ -51,6 +51,7 @@ transformed_data as (
             0
         ) as station_growth_rate,
         case
+            when station_count = 0 and ev_count > 0 then 'Critical'
             when ev_count * 1.0 / nullif(station_count, 0) > 50 then 'Critical'
             when ev_count * 1.0 / nullif(station_count, 0) > 20 then 'Moderate'
             else 'Well Supplied'
