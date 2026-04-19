@@ -32,6 +32,23 @@ models:
           - not_null
           - unique
 
+
+  - name: dim_charging_station
+    description: Station-level dimension with one row per charging station and geospatial coordinates.
+    columns:
+      - name: dim_charging_station_key
+        description: Surrogate primary key for the charging station dimension.
+        data_tests:
+          - not_null
+          - unique
+      - name: station_id
+        description: Natural charging station identifier from the EV Roam source.
+        data_tests:
+          - not_null
+          - unique
+      - name: geo_point
+        description: Geospatial point representing station longitude and latitude.
+
   - name: fct_ev_registration_monthly
     description: Monthly EV registration fact at one row per location and month.
     columns:
