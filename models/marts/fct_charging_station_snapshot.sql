@@ -2,6 +2,7 @@ with source_data as (
 
     select
         location_natural_key,
+        operator_natural_key,
         station_count,
         connector_count,
         avg_connectors_per_station
@@ -14,6 +15,7 @@ transformed_data as (
     select
         md5('fct_charging_station_snapshot|' || location_natural_key) as fct_charging_station_snapshot_key,
         md5(location_natural_key) as dim_location_key,
+        md5(operator_natural_key) as dim_station_operator_key,
         station_count,
         connector_count,
         avg_connectors_per_station
@@ -26,6 +28,7 @@ final_model as (
     select
         fct_charging_station_snapshot_key,
         dim_location_key,
+        dim_station_operator_key,
         station_count,
         connector_count,
         avg_connectors_per_station
