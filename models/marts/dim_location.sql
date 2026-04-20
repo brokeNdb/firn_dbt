@@ -3,7 +3,6 @@
 -- Transformations: Generate dim_location_key from the location natural key and expose reporting-friendly
 -- geography attributes plus population_count for downstream fact relationships.
 
-
 with
     source_data as (
 
@@ -14,6 +13,7 @@ with
             region_name,
             population_count
         from {{ ref("int_location_conformed") }}
+        where match_type = 'base_root'
 
     ),
 

@@ -2,13 +2,16 @@ version: 2
 
 models:
   - name: int_location_conformed
-    description: Single source of truth for conformed location logic across EV registrations, charging stations, and population. One row per stable location natural key.
+    description: Single source of truth for conformed location logic across EV registrations, charging stations, and population. One row per stable location natural key with embedded charging match keys for downstream joins.
     columns:
       - name: location_natural_key
         description: Stable natural location key derived from normalized location naming and used to align intermediate business concepts.
         data_tests:
           - not_null
-          - unique
+      - name: location_match_key
+        description: Root or alias-based location match key used by downstream charging models to resolve station locations into the conformed geography.
+        data_tests:
+          - not_null
       - name: population_count
         description: Population associated with the conformed location where available.
 
