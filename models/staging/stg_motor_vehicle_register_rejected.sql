@@ -1,3 +1,8 @@
+-- Purpose: Capture motor vehicle registration rows rejected from the clean staging model.
+-- Transformations: Apply the same numeric parsing logic as the clean model and emit one row
+-- per failed field with a rejection_reason for debugging and data quality review.
+
+
 with source_data as (
 
     select *

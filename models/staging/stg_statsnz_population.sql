@@ -1,3 +1,8 @@
+-- Purpose: Stage the latest Stats NZ population records at the source location grain.
+-- Transformations: Keep the latest population_count, normalize the location name for matching,
+-- and filter out rows where population_count is null.
+
+
 with source_data as (
 
     select *

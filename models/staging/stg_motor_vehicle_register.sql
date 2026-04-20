@@ -1,3 +1,8 @@
+-- Purpose: Clean and type motor vehicle registration records from the landing source.
+-- Transformations: Cast numeric-like fields, filter out rows with failed numeric parsing,
+-- and derive motive_power_group plus registration_year_month for downstream EV analytics.
+
+
 with source_data as (
 
     select *

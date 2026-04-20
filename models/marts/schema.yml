@@ -23,18 +23,8 @@ models:
       - name: year_month
         description: Human-readable month label in YYYY-MM format.
 
-  - name: dim_station_operator
-    description: Minimal station operator dimension with one row per conformed operator value.
-    columns:
-      - name: dim_station_operator_key
-        description: Surrogate primary key for the station operator dimension.
-        data_tests:
-          - not_null
-          - unique
-
-
   - name: dim_charging_station
-    description: Station-level dimension with one row per charging station and geospatial coordinates.
+    description: Station-level charging dimension with one row per station and retained operator information.
     columns:
       - name: dim_charging_station_key
         description: Surrogate primary key for the charging station dimension.
@@ -46,8 +36,10 @@ models:
         data_tests:
           - not_null
           - unique
-      - name: geo_point
-        description: Geospatial point representing station longitude and latitude.
+      - name: operator_name
+        description: Normalized operator label retained directly on the station dimension for reporting.
+      - name: geo_point_wkt
+        description: Well-known text representation of the station point derived from longitude and latitude.
 
   - name: fct_ev_registration_monthly
     description: Monthly EV registration fact at one row per location and month.
@@ -100,14 +92,6 @@ models:
               arguments:
                 to: ref('dim_location')
                 field: dim_location_key
-      - name: dim_station_operator_key
-        description: Foreign key to dim_station_operator.
-        data_tests:
-          - not_null
-          - relationships:
-              arguments:
-                to: ref('dim_station_operator')
-                field: dim_station_operator_key
       - name: station_count
         description: Number of charging stations for the location.
         data_tests:
@@ -155,3 +139,33 @@ models:
           - not_null
       - name: population_count
         description: Population associated with the location.
+
+
+  - name: fct_station_nearest_neighbour
+    description: Station-level nearest-neighbour fact with one row per charging station and the distance to its closest neighbouring station.
+    columns:
+      - name: fct_station_nearest_neighbour_key
+        description: Surrogate primary key for the nearest-neighbour station fact.
+        data_tests:
+          - not_null
+          - unique
+      - name: dim_charging_station_key
+        description: Foreign key to the source charging station in dim_charging_station.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_charging_station')
+                field: dim_charging_station_key
+      - name: nearest_dim_charging_station_key
+        description: Foreign key to the nearest neighbouring charging station in dim_charging_station.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_charging_station')
+                field: dim_charging_station_key
+      - name: distance_km
+        description: Great-circle distance in kilometers between the station and its nearest neighbour.
+        data_tests:
+          - not_null
