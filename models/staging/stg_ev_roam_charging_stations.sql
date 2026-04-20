@@ -106,8 +106,13 @@ final_model as (
         end as station_city_candidate,
         st_point(longitude, latitude) as geo_point
     from transformed_data
+    where not (
+        latitude = -38.62602994
+        and longitude = 76.0884023
+    )
 
 )
 
 select *
 from final_model
+

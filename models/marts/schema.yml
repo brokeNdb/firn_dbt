@@ -38,8 +38,8 @@ models:
           - unique
       - name: operator_name
         description: Normalized operator label retained directly on the station dimension for reporting.
-      - name: geo_point
-        description: Geospatial point representing station longitude and latitude.
+      - name: geo_point_wkt
+        description: Well-known text representation of the station point derived from longitude and latitude.
 
   - name: fct_ev_registration_monthly
     description: Monthly EV registration fact at one row per location and month.
