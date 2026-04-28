@@ -1,0 +1,410 @@
+version: 2
+
+sources:
+  - name: upstream
+    schema: "{{ target.schema }}"
+    tables:
+      - name: int_extra_attribute_value_policy
+      - name: dim_extra_attribute
+      - name: vw_v_policy_insured_object
+      - name: int_extra_attribute_value_policy_insured_object
+      - name: vw_v_policy_policy
+      - name: int_extra_attribute_value_quote_insured_object
+      - name: int_extra_attribute_value_quote
+      - name: vw_v_quotes_all
+      - name: vw_v_quotes_xref_policy_levels
+      - name: vw_v_quotes_insured_object
+      - name: vw_v_quotes_coverage
+      - name: vw_v_quotes_line
+      - name: vw_adan_aa_blocked
+      - name: vw_adan_aa_unblocked
+      - name: aai_nz_master
+      - name: vw_v_platform_x_src_dc_plt_users
+
+models:
+  - name: tfm_policy
+    description: Policy fact-style table built from upstream policy and policy extra attribute relations.
+    columns:
+      - name: policy_key
+        data_tests:
+          - not_null
+      - name: policy_number
+      - name: policy_revision_number
+      - name: policy_from_key
+      - name: policy_from_number
+      - name: status_key
+      - name: issue_date
+      - name: effective_date
+      - name: start_date
+      - name: campaign_code
+      - name: levelofcover
+      - name: policy_created_by_userid
+      - name: technologyinteractionchannel
+      - name: inceptiontechnologyinteractionchannel
+      - name: brand
+      - name: jurisdiction
+      - name: product
+      - name: productline
+
+  - name: tfm_product_coverage
+    description: Product coverage mapping by brand, jurisdiction, product, product line, level of cover, risk type, and coverage type.
+    columns:
+      - name: brand
+      - name: jurisdiction
+      - name: product
+      - name: productline
+      - name: levelofcover
+      - name: risktype
+      - name: coveragetype
+      - name: principal_coverage_indicator
+
+  - name: tfm_quote
+    description: Quote-level mart capturing quote milestones, channel attribution, and selected quote attributes.
+    columns:
+      - name: edw_load_timestamp
+      - name: edw_mdf_audit_id
+      - name: source_system_code
+      - name: policy_key
+        data_tests:
+          - not_null
+      - name: policy_number
+      - name: quote_date
+      - name: campaign_code
+      - name: quoteratedflag
+      - name: quoterateddate
+      - name: quotecompletedflag
+      - name: quotecompleteddate
+      - name: channel
+      - name: channel_start_at
+      - name: brand
+      - name: jurisdiction
+      - name: product
+      - name: productline
+      - name: levelofcover
+      - name: suminsured_raw
+      - name: userid
+      - name: first_start_date
+
+  - name: tfm_quote_bot_activity
+    description: Quote bot activity events derived from blocked activity and high-volume unblocked quote-completed activity.
+    columns:
+      - name: quote_number
+      - name: visitdate
+
+  - name: tfm_quote_cov
+    description: Quote coverage-level mart built from completed quotes and quote coverage relationships.
+    columns:
+      - name: edw_load_timestamp
+      - name: edw_mdf_audit_id
+      - name: source_system_code
+      - name: policy_key
+        data_tests:
+          - not_null
+      - name: policy_number
+      - name: quotecompleteddate
+      - name: brand
+      - name: jurisdiction
+      - name: product
+      - name: productline
+      - name: levelofcover
+      - name: risktype
+      - name: coveragetype
+      - name: coverage_key
+      - name: coverage_start_date
+      - name: principal_coverage_indicator
+
+  - name: tfm_ref_channel
+    description: Reference table for quote and policy channel values.
+    columns:
+      - name: channel_code
+        data_tests:
+          - not_null
+          - unique
+      - name: channel_name
+      - name: channel_desc
+
+  - name: tfm_user
+    description: User dimension-style table built from the latest AAI master extract, including start-date fixes and an unknown row.
+    columns:
+      - name: employee_code
+        data_tests:
+          - not_null
+      - name: start_date
+      - name: start_date_integer
+      - name: end_date
+      - name: end_date_integer
+      - name: name
+      - name: first_name
+      - name: last_name
+      - name: group_1
+      - name: group_2
+      - name: group_3
+      - name: group_4
+      - name: code
+      - name: extract_timestamp
+      - name: start_date_fixed_flag
+      - name: protect_id_join
+
+  - name: int_channel_mapping
+    description: SQL-only lookup for normalizing raw interaction channel values into reporting channel names.
+    columns:
+      - name: raw_interaction_value
+      - name: normalized_channel
+
+  - name: int_principal_coverage_mapping
+    description: SQL-only lookup for mapping level of cover, risk type, and coverage type to principal coverage indicator.
+    columns:
+      - name: levelofcover
+      - name: risktype
+      - name: coveragetype
+      - name: principal_coverage_indicator
+
+  - name: int_quote_enriched
+    description: Shared quote enrichment layer that adds date, channel, employee, and bot activity attributes to quote records before fact builds.
+    columns:
+      - name: policy_key
+      - name: policy_number
+      - name: quote_date
+      - name: quote_date_key
+      - name: campaign_code
+      - name: quoteratedflag
+      - name: quoterateddate
+      - name: quotecompletedflag
+      - name: quotecompleteddate
+      - name: dimchannelkey
+      - name: quote_start_dimchannelkey
+      - name: levelofcover
+      - name: suminsured
+      - name: userid
+      - name: dimemployeekey
+      - name: botquoteflag
+      - name: brand
+      - name: jurisdiction
+      - name: product
+      - name: productline
+
+  - name: dim_date
+    description: Date dimension spanning 1900-01-01 through 2199-12-31 plus a 9999-12-31 sentinel row, with calendar, fiscal, holiday, and rolling-period attributes.
+    columns:
+      - name: dim_date_key
+        data_tests:
+          - not_null
+      - name: business_key
+      - name: cal_date
+      - name: cal_date_key
+      - name: next_cal_date_key
+      - name: cal_date_julian
+      - name: cal_julian_day
+      - name: cal_year_week
+      - name: cal_week
+      - name: cal_year_month
+      - name: cal_month
+      - name: cal_year_quarter
+      - name: cal_quarter
+      - name: cal_year
+      - name: fin_year_month
+      - name: fin_month
+      - name: fin_year_quarter
+      - name: fin_quarter
+      - name: fin_year
+      - name: day_of_year
+      - name: day_of_month
+      - name: day_of_week
+      - name: day_of_week_name
+      - name: day_of_week_abbrev
+      - name: days_in_month
+      - name: week_of_month
+      - name: week_of_year
+      - name: month_of_year
+      - name: month_of_year_name
+      - name: month_of_year_abbrev
+      - name: eom_date_key
+      - name: weekend_flag
+      - name: holiday_flag
+      - name: current_day_flag
+      - name: current_week_flag
+      - name: current_month_flag
+      - name: current_quarter_flag
+      - name: current_year_flag
+      - name: previous_week_flag
+      - name: previous_month_flag
+      - name: previous_quarter_flag
+      - name: previous_year_flag
+      - name: eow_sun_flag
+      - name: eow_fri_flag
+      - name: eom_flag
+      - name: eoy_flag
+      - name: mtd_flag
+      - name: lmtd_flag
+      - name: lymtd_flag
+      - name: qtd_flag
+      - name: lyqtd_flag
+      - name: ytd_flag
+      - name: lytd_flag
+      - name: fin_ytd_flag
+      - name: fin_lytd_flag
+      - name: complete_month_flag
+      - name: rolling_day
+      - name: rolling_week
+      - name: rolling_month
+      - name: month_start
+      - name: month_end
+      - name: previous_day_flag
+      - name: week_start_monday
+
+  - name: dim_channel
+    description: Channel dimension built from `tfm_ref_channel` with a deterministic row-number key over channel code.
+    columns:
+      - name: dimchannelkey
+        data_tests:
+          - not_null
+      - name: channel_code
+        data_tests:
+          - not_null
+      - name: channel_name
+      - name: channel_desc
+
+  - name: dim_user
+    description: User dimension built from `tfm_user` and the latest Duck Creek platform user extract, with reporting-line enrichment.
+    columns:
+      - name: dim_employee_key
+        data_tests:
+          - not_null
+      - name: business_key
+      - name: employee_code
+      - name: protect_id
+      - name: ccr_id
+      - name: duck_unumber
+      - name: duck_username
+      - name: start_date
+      - name: start_date_integer
+      - name: end_date
+      - name: end_date_integer
+      - name: name
+      - name: first_name
+      - name: last_name
+      - name: manager
+      - name: location
+      - name: location2
+      - name: channel
+      - name: extract_timestamp
+      - name: start_date_fixed_flag
+      - name: team_leader_key
+      - name: team_leader_name
+      - name: manager_key
+      - name: manager_name
+      - name: senior_manager_key
+      - name: senior_manager_name
+      - name: department
+      - name: pvt_flag
+
+  - name: dim_product_coverage
+    description: Product coverage dimension built from `tfm_product_coverage`, with RiskGroup/Risk/Coverage hierarchy and hashed surrogate keys.
+    columns:
+      - name: dim_coverage_key
+        data_tests:
+          - not_null
+      - name: dim_coverage_key_parent
+      - name: brand
+      - name: jurisdiction
+      - name: product
+      - name: productline
+      - name: levelofcover
+      - name: risktype
+      - name: coveragetype
+      - name: producttype
+      - name: aai_product
+      - name: hierarchy_level
+      - name: principal_coverage_indicator
+
+  - name: fct_quote_duc_cov
+    description: Fact table at quote coverage grain enriched with channel, date, employee, bot, and product coverage dimensions.
+    columns:
+      - name: edw_load_timestamp
+      - name: edw_mdf_audit_id
+      - name: source_system_code
+      - name: policy_key
+        data_tests:
+          - not_null
+      - name: policy_number
+      - name: quote_date_key
+      - name: quote_date
+      - name: campaign_code
+      - name: quoteratedflag
+      - name: quoterateddate
+      - name: quotecompletedflag
+      - name: quotecompleteddate
+      - name: dimchannelkey
+      - name: quote_start_dimchannelkey
+      - name: dim_product_coverage_key
+      - name: levelofcover
+      - name: risktype
+      - name: coveragetype
+      - name: principal_coverage_indicator
+      - name: suminsured
+      - name: userid
+      - name: dimemployeekey
+      - name: botquoteflag
+      - name: brand
+      - name: jurisdiction
+      - name: product
+      - name: productline
+
+  - name: fct_quote_duc
+    description: Quote-level fact table enriched with date, channel, employee, bot, and product coverage dimensions.
+    columns:
+      - name: edw_load_timestamp
+      - name: edw_mdf_audit_id
+      - name: source_system_code
+      - name: policy_key
+        data_tests:
+          - not_null
+      - name: policy_number
+      - name: quote_date_key
+      - name: quote_date
+      - name: campaign_code
+      - name: quoteratedflag
+      - name: quoterateddate
+      - name: quotecompletedflag
+      - name: quotecompleteddate
+      - name: dimchannelkey
+      - name: quote_start_dimchannelkey
+      - name: dim_product_coverage_key
+      - name: suminsured
+      - name: userid
+      - name: dimemployeekey
+      - name: botquoteflag
+
+  - name: fct_policy_duc
+    description: Policy-level fact table for new-sale policy attribution, channel mapping, employee enrichment, and product coverage mapping.
+    columns:
+      - name: edw_load_timestamp
+      - name: edw_mdf_audit_id
+      - name: source_system_code
+      - name: policy_key
+        data_tests:
+          - not_null
+      - name: policy_number
+      - name: policy_revision_number
+      - name: policy_quote_key
+      - name: policy_from_number
+      - name: campaign_code
+      - name: new_sale_flag
+      - name: first_transaction_date_key
+      - name: new_policy_issue_date
+      - name: new_policy_effective_date
+      - name: new_policy_dim_channel_key
+      - name: new_policy_dim_coverage_key
+      - name: policy_created_by_userid
+      - name: dimemployeekey
+
+  - name: dim_product
+    description: Product dimension derived from RiskGroup-level product coverage nodes for product and sub-product reporting.
+    columns:
+      - name: dim_coverage_key
+        data_tests:
+          - not_null
+      - name: product
+      - name: sub_product
+      - name: levelofcover
+      - name: productline
